@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Campus Parking System</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; min-height: 100vh; }
+  button { font-family: inherit; }
+  #home { display: block; }
+  #faculty-view { display: none; }
+</style>
+</head>
+<body>
+
+<!-- HOME SCREEN -->
+<div id="home" style="min-height:100vh; background:linear-gradient(160deg,#0a1628 0%,#1a2a4a 50%,#0d1f3c 100%);">
+
+  <!-- Hero -->
+  <div style="text-align:center; padding:52px 20px 36px;">
+    <div style="display:inline-block; background:rgba(255,255,255,0.08); border-radius:99px; padding:6px 20px; font-size:13px; color:#7EC8E3; font-weight:600; margin-bottom:20px; border:1px solid rgba(126,200,227,0.3);">
+      🎓 CAMPUS PARKING SYSTEM
+    </div>
+    <h1 style="color:#fff; font-size:clamp(28px,6vw,52px); font-weight:900; margin:0 0 12px; line-height:1.1; letter-spacing:-1.5px;">
+      Find Parking in<br>
+      <span style="background:linear-gradient(90deg,#7EC8E3,#a78bfa); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">
+        Minutes, Not Hours.
+      </span>
+    </h1>
+    <p style="color:rgba(255,255,255,0.55); font-size:16px; margin:0 auto; max-width:420px;">
+      Real-time parking availability across all 4 faculties. Select yours below to check and update spots.
+    </p>
+  </div>
+
+  <!-- Summary bar -->
+  <div id="summary-bar" style="max-width:860px; margin:0 auto 36px; padding:0 20px; display:grid; grid-template-columns:repeat(4,1fr); gap:10px;"></div>
+
+  <!-- Faculty buttons -->
+  <div id="faculty-grid" style="max-width:860px; margin:0 auto; padding:0 20px 60px; display:grid; grid-template-columns:repeat(2,1fr); gap:18px;"></div>
+
+  <!-- Footer -->
+  <div style="text-align:center; padding-bottom:32px; color:rgba(255,255,255,0.25); font-size:12px;">
+    Campus Parking System · Max capacity 200 per faculty · Links expire in 15 min
+  </div>
+</div>
+
+<!-- FACULTY VIEW -->
+<div id="faculty-view" style="min-height:100vh;">
+  <div style="max-width:860px; margin:0 auto; padding:24px 20px;">
+
+    <!-- Header -->
+    <div style="display:flex; align-items:center; gap:16px; margin-bottom:28px;">
+      <button id="back-btn" onclick="showHome()" style="background:#fff; border-radius:12px; padding:8px 16px; cursor:pointer; font-weight:700; font-size:14px;">← Back</button>
+      <div>
+        <div id="fv-title" style="font-size:28px; font-weight:900; letter-spacing:-1px;"></div>
+        <div id="fv-subtitle" style="font-size:13px; color:#666;"></div>
+      </div>
+    </div>
+
+    <!-- Stat cards -->
+    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; margin-bottom:24px;">
+      <div style="background:#F0F4FF; border-radius:14px; padding:14px 18px; text-align:center;">
+        <div style="font-size:30px; font-weight:900; color:#1848A0;">200</div>
+        <div style="font-size:12px; color:#666; font-weight:600; margin-top:2px;">Total Spots</div>
+      </div>
+      <div id="stat-occupied" style="border-radius:14px; padding:14px 18px; text-align:center; background:#FFF7E6;">
+        <div id="stat-occupied-val" style="font-size:30px; font-weight:900; color:#854F0B;">0</div>
+        <div style="font-size:12px; color:#666; font-weight:600; margin-top:2px;">Occupied</div>
+      </div>
+      <div id="stat-available" style="border-radius:14px; padding:14px 18px; text-align:center; background:#EAF3DE;">
+        <div id="stat-available-val" style="font-size:30px; font-weight:900; color:#3B6D11;">200</div>
+        <div style="font-size:12px; color:#666; font-weight:600; margin-top:2px;">Available</div>
+      </div>
+    </div>
+
+    <!-- Progress bar card -->
+    <div style="background:#fff; border-radius:16px; padding:16px 20px; margin-bottom:24px; border:1px solid #e8e8e8;">
+      <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:4px; color:#555;">
+        <span id="bar-label" style="font-weight:600;">0 / 200 spots occupied</span>
+        <span id="bar-pct" style="font-weight:700; color:#1D9E75;">0% full</span>
+      </div>
+      <div style="height:10px; background:#e8e8e8; border-radius:99px; overflow:hidden;">
+        <div id="progress-bar" style="height:100%; width:0%; background:#1D9E75; border-radius:99px; transition:width 0.4s ease;"></div>
+      </div>
+    </div>
+
+    <!-- Parking action -->
+    <div style="background:#fff; border-radius:20px; padding:22px 24px; margin-bottom:24px; border:1px solid #e8e8e8; box-shadow:0 2px 10px rgba(0,0,0,0.05);">
+      <div style="font-size:16px; font-weight:800; color:#222; margin-bottom:6px;">Update Parking Status</div>
+      <div style="font-size:13px; color:#888; margin-bottom:18px;">Tap when you park or leave to keep the count accurate for everyone.</div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+        <button id="btn-parked" onclick="handleParked()" style="border:none; border-radius:14px; padding:16px; font-size:16px; font-weight:800; cursor:pointer; transition:opacity 0.2s;">🚗 I Parked</button>
+        <button id="btn-vacated" onclick="handleVacated()" style="border-radius:14px; padding:16px; font-size:16px; font-weight:800; cursor:pointer; background:#fff; transition:opacity 0.2s;">✅ I Vacated</button>
+      </div>
+      <div id="action-msg" style="display:none; margin-top:14px; background:#EAF3DE; border-radius:10px; padding:10px 14px; font-size:13px; color:#3B6D11; font-weight:600;">
+        ✅ You are parked. Click "I Vacated" when you leave.
+      </div>
+      <div id="full-msg" style="display:none; margin-top:14px; background:#FCEBEB; border-radius:10px; padding:10px 14px; font-size:13px; color:#A32D2D; font-weight:600;">
+        🚫 Parking lot is full. Try another faculty or wait for a vacancy.
+      </div>
+    </div>
+
+    <!-- Photo Link input -->
+    <div style="background:#fff; border-radius:20px; padding:22px 24px; border:1px solid #e8e8e8; box-shadow:0 2px 10px rgba(0,0,0,0.05);">
+      <div style="font-size:16px; font-weight:800; color:#222; margin-bottom:6px;">🔗 Share an Image Link</div>
+      <div style="font-size:13px; color:#888; margin-bottom:14px;">Paste an image URL (from Discord, Imgur, etc.) showing an empty spot. Auto-deletes in <strong>15 minutes</strong>.</div>
+      
+      <div style="display:flex; gap:10px; margin-bottom:20px;">
+        <input type="text" id="url-input" placeholder="https://example.com/parking-spot.jpg" style="flex:1; padding:12px 16px; border-radius:10px; border:1px solid #ccc; font-size:14px;" />
+        <button id="submit-url-btn" onclick="handleSubmitUrl()" style="padding:12px 20px; border-radius:10px; font-weight:700; cursor:pointer; border:none; color:#fff;">Add Spot</button>
+      </div>
+
+      <div id="photo-empty" style="text-align:center; padding:32px 0; color:#bbb; font-size:14px;">No shared spots yet. Be the first to share!</div>
+      <div id="photo-grid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:14px;"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Firebase Infrastructure Compat Libraries -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyBxWftHvl9lyiv0vN3N6GaRe2ppTwv1JDM",
+  authDomain: "campus-parking-system-104e6.firebaseapp.com",
+  databaseURL: "https://campus-parking-system-104e6-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "campus-parking-system-104e6",
+  appId: "1:409808753403:web:c76396941b6253331cd65e"
+};
+
+// Initialize App Connection
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+const FACULTIES = [
+  { id:"FCI", name:"FCI", full:"Faculty of Computer & Information", color:"#1D6FA4", light:"#E3F0FA", emoji:"💻" },
+  { id:"FOM", name:"FOM", full:"Faculty of Management",             color:"#0F6E56", light:"#E1F5EE", emoji:"📊" },
+  { id:"FAIE",name:"FAIE",full:"Faculty of AI & Engineering",       color:"#7F2EAC", light:"#F0E6FA", emoji:"⚙️" },
+  { id:"FCM", name:"FCM", full:"Faculty of Creative Multimedia",    color:"#C44B1A", light:"#FAECE7", emoji:"🎨" },
+];
+
+const MAX = 200;
+const PHOTO_TTL = 15 * 60 * 1000;
+
+let counts = { FCI:0, FOM:0, FAIE:0, FCM:0 };
+const userActions = { FCI:null, FOM:null, FAIE:null, FCM:null };
+let currentFaculty = null;
+let photos = [];
+let photoTimers = {};
+
+function statusColor(pct) {
+  return pct >= 90 ? "#E24B4A" : pct >= 70 ? "#EF9F27" : "#1D9E75";
+}
+
+// Live real-time listener trees
+db.ref('parking_counts').on('value', (snapshot) => {
+  const data = snapshot.val();
+  if (data) {
+    counts = {
+      FCI: data.FCI || 0,
+      FOM: data.FOM || 0,
+      FAIE: data.FAIE || 0,
+      FCM: data.FCM || 0
+    };
+    renderSummaryBar();
+    renderFacultyGrid();
+    updateFacultyStats();
+  }
+});
+
+db.ref('parking_photos').on('value', (snapshot) => {
+  const data = snapshot.val();
+  photos = [];
+  if (data) {
+    Object.keys(data).forEach(key => {
+      photos.push({ id: key, ...data[key] });
+    });
+  }
+  renderPhotos();
+});
+
+function renderSummaryBar() {
+  const bar = document.getElementById('summary-bar');
+  if(!bar) return;
+  bar.innerHTML = FACULTIES.map(f => {
+    const avail = MAX - counts[f.id];
+    const pct = Math.round((counts[f.id] / MAX) * 100);
+    const sc = statusColor(pct);
+    return `<div style="background:rgba(255,255,255,0.07);border-radius:12px;padding:12px 14px;border:1px solid rgba(255,255,255,0.1);">
+      <div style="font-size:11px;color:rgba(255,255,255,0.5);font-weight:700;margin-bottom:4px;">${f.id}</div>
+      <div style="font-size:20px;font-weight:900;color:${sc};">${avail}</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.45);">available</div>
+      <div style="height:3px;background:rgba(255,255,255,0.1);border-radius:99px;margin-top:8px;overflow:hidden;">
+        <div style="height:100%;width:${pct}%;background:${sc};border-radius:99px;"></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderFacultyGrid() {
+  const grid = document.getElementById('faculty-grid');
+  if(!grid) return;
+  grid.innerHTML = FACULTIES.map(f => {
+    const count = counts[f.id];
+    const avail = MAX - count;
+    const pct = Math.round((count / MAX) * 100);
+    const sc = statusColor(pct);
+    const label = pct >= 90 ? "Almost Full" : pct >= 70 ? "Filling Up" : "Available";
+    return `<button onclick="showFaculty('${f.id}')"
+      onmouseenter="this.style.transform='translateY(-4px) scale(1.02)';this.style.boxShadow='0 16px 40px ${f.color}44';this.style.borderColor='${f.color}';"
+      onmouseleave="this.style.transform='translateY(0) scale(1)';this.style.boxShadow='none';this.style.borderColor='${f.color}55';"
+      style="background:linear-gradient(135deg,${f.color}22 0%,${f.color}11 100%);border:1.5px solid ${f.color}55;border-radius:22px;padding:28px 26px;cursor:pointer;text-align:left;transition:transform 0.18s,box-shadow 0.18s,border-color 0.18s;position:relative;overflow:hidden;">
+      <div style="position:absolute;top:-30px;right:-30px;width:120px;height:120px;border-radius:50%;background:${f.color}18;pointer-events:none;"></div>
+      <div style="font-size:36px;margin-bottom:8px;">${f.emoji}</div>
+      <div style="font-size:30px;font-weight:900;color:#fff;letter-spacing:-1px;margin-bottom:2px;">${f.name}</div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.55);margin-bottom:20px;">${f.full}</div>
+      <div style="display:flex;gap:10px;margin-bottom:14px;">
+        <div style="background:rgba(255,255,255,0.08);border-radius:10px;padding:8px 14px;flex:1;">
+          <div style="font-size:22px;font-weight:900;color:#fff;">${avail}</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.5);">available</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.08);border-radius:10px;padding:8px 14px;flex:1;">
+          <div style="font-size:22px;font-weight:900;color:#fff;">${count}</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.5);">occupied</div>
+        </div>
+      </div>
+      <div style="height:6px;background:rgba(255,255,255,0.1);border-radius:99px;margin-bottom:10px;overflow:hidden;">
+        <div style="height:100%;width:${pct}%;background:${sc};border-radius:99px;"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:12px;background:${sc}22;color:${sc};border-radius:8px;padding:3px 10px;font-weight:700;border:1px solid ${sc}44;">${label}</span>
+        <span style="font-size:13px;color:rgba(255,255,255,0.4);font-weight:600;">${pct}% full →</span>
+      </div>
+    </button>`;
+  }).join('');
+}
+
+function showFaculty(id) {
+  currentFaculty = FACULTIES.find(f => f.id === id);
+  document.getElementById('home').style.display = 'none';
+  const fv = document.getElementById('faculty-view');
+  fv.style.display = 'block';
+  fv.style.background = `linear-gradient(135deg, ${currentFaculty.light} 0%, #fafafa 60%)`;
+
+  document.getElementById('back-btn').style.border = `2px solid ${currentFaculty.color}`;
+  document.getElementById('back-btn').style.color = currentFaculty.color;
+  document.getElementById('fv-title').textContent = `${currentFaculty.emoji} ${currentFaculty.name}`;
+  document.getElementById('fv-title').style.color = currentFaculty.color;
+  document.getElementById('fv-subtitle').textContent = currentFaculty.full;
+
+  document.getElementById('submit-url-btn').style.background = currentFaculty.color;
+
+  resetButtons();
+  if (userActions[currentFaculty.id] === 'parked') setParkedState();
+  updateFacultyStats();
+  renderPhotos();
+}
+
+function showHome() {
+  document.getElementById('home').style.display = 'block';
+  document.getElementById('faculty-view').style.display = 'none';
+  renderSummaryBar();
+  renderFacultyGrid();
+}
+
+function updateFacultyStats() {
+  if (!currentFaculty) return;
+  const count = counts[currentFaculty.id];
+  const avail = MAX - count;
+  const pct = Math.round((count / MAX) * 100);
+  const sc = statusColor(pct);
+
+  document.getElementById('stat-occupied-val').textContent = count;
+  document.getElementById('stat-occupied').style.background = pct >= 90 ? "#FCEBEB" : "#FFF7E6";
+  document.getElementById('stat-occupied-val').style.color = pct >= 90 ? "#A32D2D" : "#854F0B";
+
+  document.getElementById('stat-available-val').textContent = avail;
+  document.getElementById('stat-available').style.background = avail === 0 ? "#FCEBEB" : "#EAF3DE";
+  document.getElementById('stat-available-val').style.color = avail === 0 ? "#A32D2D" : "#3B6D11";
+
+  document.getElementById('bar-label').textContent = `${count} / ${MAX} spots occupied`;
+  document.getElementById('bar-pct').textContent = `${pct}% full`;
+  document.getElementById('bar-pct').style.color = sc;
+  document.getElementById('progress-bar').style.width = `${pct}%`;
+  document.getElementById('progress-bar').style.background = sc;
+
+  document.getElementById('full-msg').style.display = (!userActions[currentFaculty.id] && count >= MAX) ? 'block' : 'none';
+}
+
+function resetButtons() {
+  const f = currentFaculty;
+  const btnP = document.getElementById('btn-parked');
+  const btnV = document.getElementById('btn-vacated');
+  btnP.textContent = '🚗 I Parked';
+  btnP.style.background = f.color;
+  btnP.style.color = '#fff';
+  btnP.style.border = 'none';
+  btnP.style.cursor = 'pointer';
+  btnP.disabled = false;
+
+  btnV.textContent = '🚪 I Vacated';
+  btnV.style.background = '#f0f0f0';
+  btnV.style.color = '#aaa';
+  btnV.style.border = '2px solid #e0e0e0';
+  btnV.style.cursor = 'not-allowed';
+  btnV.disabled = true;
+  document.getElementById('action-msg').style.display = 'none';
+  document.getElementById('full-msg').style.display = 'none';
+}
+
+function setParkedState() {
+  const f = currentFaculty;
+  const btnP = document.getElementById('btn-parked');
+  const btnV = document.getElementById('btn-vacated');
+  btnP.textContent = '✅ Parked!';
+  btnP.style.background = '#EAF3DE';
+  btnP.style.color = '#3B6D11';
+  btnP.style.border = '2px solid #3B6D11';
+  btnP.disabled = true;
+  btnP.style.cursor = 'not-allowed';
+
+  btnV.textContent = '🚪 I Vacated';
+  btnV.style.background = '#fff';
+  btnV.style.color = f.color;
+  btnV.style.border = `2px solid ${f.color}`;
+  btnV.style.cursor = 'pointer';
+  btnV.disabled = false;
+  document.getElementById('action-msg').textContent = '✅ You are parked. Click "I Vacated" when you leave.';
+  document.getElementById('action-msg').style.display = 'block';
+  document.getElementById('full-msg').style.display = 'none';
+}
+
+function handleParked() {
+  if (userActions[currentFaculty.id] === 'parked' || counts[currentFaculty.id] >= MAX) return;
+  
+  db.ref('parking_counts/' + currentFaculty.id).set(counts[currentFaculty.id] + 1);
+  userActions[currentFaculty.id] = 'parked';
+  setParkedState();
+}
+
+function handleVacated() {
+  if (userActions[currentFaculty.id] !== 'parked' || counts[currentFaculty.id] <= 0) return;
+  
+  db.ref('parking_counts/' + currentFaculty.id).set(counts[currentFaculty.id] - 1);
+  userActions[currentFaculty.id] = null;
+  resetButtons();
+}
+
+function formatTime(ms) {
+  const m = Math.floor(ms / 60000);
+  const s = Math.floor((ms % 60000) / 1000);
+  return `${m}:${s.toString().padStart(2,'0')}`;
+}
+
+function handleSubmitUrl() {
+  const input = document.getElementById('url-input');
+  const url = input.value.trim();
+  if (!url) return;
+
+  // Structural sanity check for image links
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    alert('Please enter a valid image URL link starting with http:// or https://');
+    return;
+  }
+
+  const fileId = 'spot_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+  const photoData = {
+    url: url,
+    name: "Shared Spot Link",
+    timestamp: Date.now(),
+    facultyId: currentFaculty.id
+  };
+
+  db.ref('parking_photos/' + fileId).set(photoData).then(() => {
+    input.value = '';
+  }).catch(err => {
+    console.error(err);
+    alert('Failed to save link to database tree.');
+  });
+}
+
+function startPhotoTimer(id) {
+  if (photoTimers[id]) clearInterval(photoTimers[id]);
+  photoTimers[id] = setInterval(() => {
+    const idx = photos.findIndex(p => p.id === id);
+    if (idx === -1) { clearInterval(photoTimers[id]); return; }
+    const left = PHOTO_TTL - (Date.now() - photos[idx].timestamp);
+    if (left <= 0) {
+      clearInterval(photoTimers[id]);
+      removePhoto(id); 
+    } else {
+      const card = document.getElementById(`photo-${id}`);
+      if (card) {
+        const pct = (left / PHOTO_TTL) * 100;
+        const tc = pct < 20 ? "#E24B4A" : pct < 50 ? "#EF9F27" : "#1D9E75";
+        const timerEl = card.querySelector('.timer-label');
+        const timerBar = card.querySelector('.timer-bar');
+        if (timerEl) timerEl.textContent = `⏱ ${formatTime(left)}`;
+        if (timerBar) { timerBar.style.width = `${pct}%`; timerBar.style.background = tc; }
+      }
+    }
+  }, 1000);
+}
+
+function removePhoto(id) {
+  db.ref('parking_photos/' + id).remove().then(() => {
+    if (photoTimers[id]) { clearInterval(photoTimers[id]); delete photoTimers[id]; }
+  });
+}
+
+function renderPhotos() {
+  if (!currentFaculty) return;
+  const fp = photos.filter(p => p.facultyId === currentFaculty.id);
+  document.getElementById('photo-empty').style.display = fp.length === 0 ? 'block' : 'none';
+  const grid = document.getElementById('photo-grid');
+  if(!grid) return;
+  grid.innerHTML = fp.map(p => {
+    const left = PHOTO_TTL - (Date.now() - p.timestamp);
+    const pct = Math.max(0, (left / PHOTO_TTL) * 100);
+    const tc = pct < 20 ? "#E24B4A" : pct < 50 ? "#EF9F27" : "#1D9E75";
+    return `<div id="photo-${p.id}" style="background:#fff;border:1px solid #e8e8e8;border-radius:14px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.07);">
+      <div style="position:relative;aspect-ratio:4/3;overflow:hidden;background:#f5f5f5;">
+        <img src="${p.url}" alt="parking spot" style="width:100%;height:100%;object-fit:cover;" onerror="this.src='https://images.unsplash.com/photo-1506521781263-d8422e82f27a?auto=format&fit=crop&w=300&q=80'"/>
+        <div class="timer-label" style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.65);border-radius:8px;padding:3px 8px;color:#fff;font-size:12px;font-weight:600;">⏱ ${formatTime(left)}</div>
+      </div>
+      <div style="padding:10px 12px;display:flex;justify-content:space-between;align-items:center;">
+        <div style="font-size:12px;color:#888;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:70%;">Spot Report</div>
+        <button onclick="removePhoto('${p.id}')" style="background:#FCEBEB;border:none;border-radius:8px;padding:4px 10px;font-size:12px;color:#A32D2D;cursor:pointer;font-weight:600;">Remove</button>
+      </div>
+      <div style="height:4px;background:#eee;">
+        <div class="timer-bar" style="height:100%;width:${pct}%;background:${tc};transition:width 1s linear;"></div>
+      </div>
+    </div>`;
+  }).join('');
+  fp.forEach(p => { if (!photoTimers[p.id]) startPhotoTimer(p.id); });
+}
+
+// Init
+renderSummaryBar();
+renderFacultyGrid();
+</script>
+</body>
+</html>
