@@ -14,10 +14,8 @@
 </head>
 <body>
 
-<!-- HOME SCREEN -->
 <div id="home" style="min-height:100vh; background:linear-gradient(160deg,#0a1628 0%,#1a2a4a 50%,#0d1f3c 100%);">
 
-  <!-- Hero -->
   <div style="text-align:center; padding:52px 20px 36px;">
     <div style="display:inline-block; background:rgba(255,255,255,0.08); border-radius:99px; padding:6px 20px; font-size:13px; color:#7EC8E3; font-weight:600; margin-bottom:20px; border:1px solid rgba(126,200,227,0.3);">
       🎓 CAMPUS PARKING SYSTEM
@@ -33,23 +31,18 @@
     </p>
   </div>
 
-  <!-- Summary bar -->
   <div id="summary-bar" style="max-width:860px; margin:0 auto 36px; padding:0 20px; display:grid; grid-template-columns:repeat(4,1fr); gap:10px;"></div>
 
-  <!-- Faculty buttons -->
   <div id="faculty-grid" style="max-width:860px; margin:0 auto; padding:0 20px 60px; display:grid; grid-template-columns:repeat(2,1fr); gap:18px;"></div>
 
-  <!-- Footer -->
   <div style="text-align:center; padding-bottom:32px; color:rgba(255,255,255,0.25); font-size:12px;">
     Campus Parking System · Max capacity 200 per faculty · Links expire in 15 min
   </div>
 </div>
 
-<!-- FACULTY VIEW -->
 <div id="faculty-view" style="min-height:100vh;">
   <div style="max-width:860px; margin:0 auto; padding:24px 20px;">
 
-    <!-- Header -->
     <div style="display:flex; align-items:center; gap:16px; margin-bottom:28px;">
       <button id="back-btn" onclick="showHome()" style="background:#fff; border-radius:12px; padding:8px 16px; cursor:pointer; font-weight:700; font-size:14px;">← Back</button>
       <div>
@@ -58,7 +51,6 @@
       </div>
     </div>
 
-    <!-- Stat cards -->
     <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; margin-bottom:24px;">
       <div style="background:#F0F4FF; border-radius:14px; padding:14px 18px; text-align:center;">
         <div style="font-size:30px; font-weight:900; color:#1848A0;">200</div>
@@ -74,7 +66,6 @@
       </div>
     </div>
 
-    <!-- Progress bar card -->
     <div style="background:#fff; border-radius:16px; padding:16px 20px; margin-bottom:24px; border:1px solid #e8e8e8;">
       <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:4px; color:#555;">
         <span id="bar-label" style="font-weight:600;">0 / 200 spots occupied</span>
@@ -85,7 +76,6 @@
       </div>
     </div>
 
-    <!-- Parking action -->
     <div style="background:#fff; border-radius:20px; padding:22px 24px; margin-bottom:24px; border:1px solid #e8e8e8; box-shadow:0 2px 10px rgba(0,0,0,0.05);">
       <div style="font-size:16px; font-weight:800; color:#222; margin-bottom:6px;">Update Parking Status</div>
       <div style="font-size:13px; color:#888; margin-bottom:18px;">Tap when you park or leave to keep the count accurate for everyone.</div>
@@ -101,7 +91,6 @@
       </div>
     </div>
 
-    <!-- Photo Link input -->
     <div style="background:#fff; border-radius:20px; padding:22px 24px; border:1px solid #e8e8e8; box-shadow:0 2px 10px rgba(0,0,0,0.05);">
       <div style="font-size:16px; font-weight:800; color:#222; margin-bottom:6px;">🔗 Share an Image Link</div>
       <div style="font-size:13px; color:#888; margin-bottom:14px;">Paste an image URL (from Discord, Imgur, etc.) showing an empty spot. Auto-deletes in <strong>15 minutes</strong>.</div>
@@ -118,7 +107,6 @@
   </div>
 </div>
 
-<!-- Firebase Infrastructure Compat Libraries -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
@@ -146,7 +134,15 @@ const MAX = 200;
 const PHOTO_TTL = 15 * 60 * 1000;
 
 let counts = { FCI:0, FOM:0, FAIE:0, FCM:0 };
-const userActions = { FCI:null, FOM:null, FAIE:null, FCM:null };
+
+// LOAD INITIAL USER ACTIONS FROM LOCALSTORAGE SO DATA PERSISTS ON REFRESH
+const userActions = {
+  FCI: localStorage.getItem('user_parked_FCI') || null,
+  FOM: localStorage.getItem('user_parked_FOM') || null,
+  FAIE: localStorage.getItem('user_parked_FAIE') || null,
+  FCM: localStorage.getItem('user_parked_FCM') || null
+};
+
 let currentFaculty = null;
 let photos = [];
 let photoTimers = {};
@@ -253,8 +249,12 @@ function showFaculty(id) {
 
   document.getElementById('submit-url-btn').style.background = currentFaculty.color;
 
-  resetButtons();
-  if (userActions[currentFaculty.id] === 'parked') setParkedState();
+  // DYNAMIC RE-CHECK: If localStorage says they are parked here, keep button shifted!
+  if (userActions[currentFaculty.id] === 'parked') {
+    setParkedState();
+  } else {
+    resetButtons();
+  }
   updateFacultyStats();
   renderPhotos();
 }
@@ -337,7 +337,11 @@ function handleParked() {
   if (userActions[currentFaculty.id] === 'parked' || counts[currentFaculty.id] >= MAX) return;
   
   db.ref('parking_counts/' + currentFaculty.id).set(counts[currentFaculty.id] + 1);
+  
+  // LOCK STATE LOCALLY IN BROWSER
   userActions[currentFaculty.id] = 'parked';
+  localStorage.setItem('user_parked_' + currentFaculty.id, 'parked');
+  
   setParkedState();
 }
 
@@ -345,7 +349,11 @@ function handleVacated() {
   if (userActions[currentFaculty.id] !== 'parked' || counts[currentFaculty.id] <= 0) return;
   
   db.ref('parking_counts/' + currentFaculty.id).set(counts[currentFaculty.id] - 1);
+  
+  // CLEAR STATE LOCALLY FROM BROWSER
   userActions[currentFaculty.id] = null;
+  localStorage.removeItem('user_parked_' + currentFaculty.id);
+  
   resetButtons();
 }
 
